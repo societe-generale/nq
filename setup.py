@@ -23,6 +23,8 @@ setup(
     ],
     keywords="dictionary nested query",
     packages=find_packages(include=["nq"]),
+    package_data={'': ['nq/VERSION']},
+    include_package_data=True,
     install_requires=[],
     extras_require={"tests": ["pytest", "flake8", "pytest-cov"]},
     entry_points={"console_scripts": []},
