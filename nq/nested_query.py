@@ -15,6 +15,12 @@ def _common_iterable(obj):
 def nested_query(iterable, *path_parts, **kwargs):
     results = []
     depth = kwargs["depth"] if "depth" in kwargs else 0
+    flags = []
+    if "flags" in kwargs:
+        flags = kwargs["flags"]
+        if not isinstance(flags, list):
+            flags = [flags]
+
     if len(path_parts) > 0:
         path_part = path_parts[0]
         if isinstance(path_part, Filter):
@@ -55,7 +61,15 @@ def nested_query(iterable, *path_parts, **kwargs):
                     results += nested_query(
                         iterable[path_part], *path_parts[1::], depth=depth + 1
                     )
-        return results[0] if depth == 0 and len(results) == 1 else results
+        if depth == 0 and len(results) == 1:
+            return results[0]
+        else:
+            if Flags.FIRST_RESULT in flags:
+                return results[0]
+            elif Flags.LAST_RESULT in flags:
+                return results[-1]
+            else:
+                return results
     else:
         return iterable
 
