@@ -1,4 +1,5 @@
 from nq.filters import Filter
+from nq.flags import Flags
 
 
 class recurse_until:
