@@ -13,9 +13,19 @@ def _common_iterable(obj):
         return (index for index, value in enumerate(obj))
 
 
+def logger(enabled, depth):
+    def log_wrapper(message, *args, **kwargs):
+        if enabled:
+            print(" " * depth * 2, "[nq]", message, *args, **kwargs)
+
+    return log_wrapper
+
+
 def nested_query(iterable, *path_parts, **kwargs):
     results = []
     depth = kwargs["depth"] if "depth" in kwargs else 0
+    verbose = kwargs["verbose"] if "verbose" in kwargs else False
+    log = logger(verbose, depth)
     flags = []
     if "flags" in kwargs:
         flags = kwargs["flags"]
@@ -24,29 +34,37 @@ def nested_query(iterable, *path_parts, **kwargs):
 
     if len(path_parts) > 0:
         path_part = path_parts[0]
+        log("Searching with path part", path_part, "on iterable", iterable)
         if isinstance(path_part, Filter):
             for key in _common_iterable(iterable):
+                log("Applying filter", path_part, "on item", iterable[key])
                 if path_part.check_filter(key, iterable[key], depth):
                     if len(path_parts) == 1:
                         results.append(iterable[key])
                     else:
                         results += nested_query(
-                            iterable[key], *path_parts[1::], depth=depth + 1
+                            iterable[key],
+                            *path_parts[1::],
+                            depth=depth + 1,
+                            verbose=verbose
                         )
         elif path_part is recurse_until:
             if len(path_parts) > 1:
                 test_next_part = nested_query(
-                    iterable, *path_parts[1::], depth=depth + 1
+                    iterable, *path_parts[1::], depth=depth + 1, verbose=verbose
                 )
-                if not test_next_part and type(iterable) in (list, dict):
+                if type(iterable) in (list, dict):
                     for key in _common_iterable(iterable):
                         if len(path_parts) == 1:
                             results.append(iterable[key])
                         else:
                             results += nested_query(
-                                iterable[key], *path_parts, depth=depth + 1
+                                iterable[key],
+                                *path_parts,
+                                depth=depth + 1,
+                                verbose=verbose
                             )
-                else:
+                if test_next_part:
                     results += test_next_part
         else:
             found_item = False
@@ -60,8 +78,12 @@ def nested_query(iterable, *path_parts, **kwargs):
                     results.append(iterable[path_part])
                 elif type(iterable[path_part]) in (tuple, dict, list):
                     results += nested_query(
-                        iterable[path_part], *path_parts[1::], depth=depth + 1
+                        iterable[path_part],
+                        *path_parts[1::],
+                        depth=depth + 1,
+                        verbose=verbose
                     )
+        log("Found results", results)
         if depth == 0 and len(results) == 1:
             return results[0]
         else:
