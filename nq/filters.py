@@ -40,7 +40,10 @@ class Filter:
 
     def check_filter(self, key, value, depth):
         all_args = _ParameterStore(key, value, depth, *self.args, **self.kwargs)
-        return self.func(all_args)
+        try:
+            return self.func(all_args)
+        except Exception as e:
+            return False
 
     def __repr__(self):
         return f"{self.name}({self.args}, {self.kwargs})"

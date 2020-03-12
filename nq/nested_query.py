@@ -13,6 +13,10 @@ def _common_iterable(obj):
         return (index for index, value in enumerate(obj))
 
 
+def _is_iterable(obj):
+    return isinstance(obj, (list, tuple, set, dict))
+
+
 def logger(enabled, depth):
     def log_wrapper(message, *args, **kwargs):
         if enabled:
@@ -23,6 +27,8 @@ def logger(enabled, depth):
 
 def nested_query(iterable, *path_parts, **kwargs):
     results = []
+    if not _is_iterable(iterable):
+        return results
     depth = kwargs["depth"] if "depth" in kwargs else 0
     verbose = kwargs["verbose"] if "verbose" in kwargs else False
     log = logger(verbose, depth)
